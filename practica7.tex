@@ -1,0 +1,263 @@
+% type
+\documentclass{article}
+
+% format
+\usepackage[margin=1.5cm]{geometry}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+
+% images
+\usepackage{graphicx}
+\usepackage{float}
+
+% font
+\usepackage{lmodern}
+% header
+\title{
+  Estructuras Discretas 2022-1\\
+  Práctica 7, 2a parte: Tablas de verdad}
+
+% language
+\usepackage[spanish]{babel}
+
+% code
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amssymb}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstset{language=bash}
+\lstdefinestyle{mystyle}{
+  backgroundcolor=\color{backcolour},
+  commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  % numbers=left,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2
+}
+
+\lstset{style=mystyle}
+% include spanish in comments and symbols in listings
+\lstset{literate=
+  {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+  {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+  {à}{{\`a}}1 {è}{{\`e}}1 {ì}{{\`i}}1 {ò}{{\`o}}1 {ù}{{\`u}}1
+  {À}{{\`A}}1 {È}{{\'E}}1 {Ì}{{\`I}}1 {Ò}{{\`O}}1 {Ù}{{\`U}}1
+  {ä}{{\"a}}1 {ë}{{\"e}}1 {ï}{{\"i}}1 {ö}{{\"o}}1 {ü}{{\"u}}1
+  {Ä}{{\"A}}1 {Ë}{{\"E}}1 {Ï}{{\"I}}1 {Ö}{{\"O}}1 {Ü}{{\"U}}1
+  {â}{{\^a}}1 {ê}{{\^e}}1 {î}{{\^i}}1 {ô}{{\^o}}1 {û}{{\^u}}1
+  {Â}{{\^A}}1 {Ê}{{\^E}}1 {Î}{{\^I}}1 {Ô}{{\^O}}1 {Û}{{\^U}}1
+  {ã}{{\~a}}1 {ẽ}{{\~e}}1 {ĩ}{{\~i}}1 {õ}{{\~o}}1 {ũ}{{\~u}}1
+  {Ã}{{\~A}}1 {Ẽ}{{\~E}}1 {Ĩ}{{\~I}}1 {Õ}{{\~O}}1 {Ũ}{{\~U}}1
+  {œ}{{\oe}}1 {Œ}{{\OE}}1 {æ}{{\ae}}1 {Æ}{{\AE}}1 {ß}{{\ss}}1
+  {ű}{{\H{u}}}1 {Ű}{{\H{U}}}1 {ő}{{\H{o}}}1 {Ő}{{\H{O}}}1
+  {ç}{{\c c}}1 {Ç}{{\c C}}1 {ø}{{\o}}1 {å}{{\r a}}1 {Å}{{\r A}}1
+  {€}{{\euro}}1 {£}{{\pounds}}1 {«}{{\guillemotleft}}1
+  {»}{{\guillemotright}}1 {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1 {¡}{{!`}}1
+  % symbols of propositional logic in listings
+  {nit}{{\textcolor{blue}{$\neg$}}}1 %neg
+  {|||}{{\textcolor{blue}{$\vee$}}}1 %or
+  {&&&}{{\textcolor{blue}{$\wedge$}}}1 %and
+  {->}{{\textcolor{blue}{$\rightarrow$}}}1 %impl
+  {<->}{{\textcolor{blue}{$\leftrightarrow$}}}1 %equiv
+}
+% header
+\author{
+  Facultad de Ciencias, UNAM
+}
+
+\date{ Fecha de entrega: 14 de enero del 2022
+}
+
+\newcommand{\ttt}[1]{%
+  \texttt{#1}%
+}
+\begin{document}
+\maketitle
+Resuelva los siguientes ejercicios, la práctica es en \textbf{parejas}. En
+el archivo \ttt{formulas.py} se encuentra la firma correspondiente para
+cada función y donde tiene que completar con código. Después de haber
+resuelto todo, puede ejecutar
+dentro de la carpeta el comando
+\ttt{python3 -m unittest -v test\_formulas.py} para asegurarse que la
+salida de cada función es correcta, es importante mencionar que esto
+no asegura que esté bien hecho, por ejemplo, que no haya usado
+funciones ya definidas en \ttt{Python} que resuelvan directamente
+el problema pero podrá darse cuenta si alguna función es incorrecta.
+
+Esta práctica utiliza el código de las últimas dos prácticas.
+
+Para la entrega, siga las especificaciones publicadas en \ttt{Classroom}.
+
+
+\textbf{Recomendación: Cuando se usa el símbolo $\diagdown$ en una cadena de python, este puede detectarlo como que se está cortando la cadena para continuarla en la siguiente línea, por lo que puede arrojar un error. Para que no suceda esto pueden usar ``raw-strings'' que son cadenas con el prefijo ``r'' que indican a Python que no evalúe de forma especial ningún símbolo $\diagdown$ también se puede utilizar la doble diagonal $\diagdown \diagdown$.}
+
+\begin{enumerate}
+
+\item Defina la función \ttt{evalua\_sub}. Recibe como entrada una
+  lista de booleanos (asignación de verdad)
+  y devuelve una lista de booleanos; las entradas de esta lista de
+  booleanos corresponden con las posiciones de la lista de
+  subfórmulas que genera la función \ttt{aplana}. La finalidad de esta
+  función es generar los renglones de la tabla de verdad de esta
+  fórmula. Sólo la primera ocurrencia está evaluada en la lista.
+\begin{lstlisting}
+# Creación de fórmulas
+>>> f1 = Formula(1)
+>>> f2 = Formula(2)
+>>> f4 = Formula(4)
+# Conjunción de f1, f2 = f3
+>>> f3 = Formula(f1, 'C', f2)
+# evalua_sub de f3
+>>> f3.evalua_sub([False, True])
+{x1: False, x2: True, (x1 &&&& x2): False}
+>>> f3.evalua_sub([True,True])
+{x1: True, x2: True, (x1 &&& x2): True}
+# Disyunción de f3, f4 = f5
+>>> f5 = Formula(f3, 'D', f4)
+# evalua_sub de f5
+>>> f5.evalua_sub([True, True, False])
+{x1: True, x2: True, (x1 &&& x2): True, x4: False, ((x1 &&& x2) ||| x4): True}
+\end{lstlisting}
+
+\item Implemente de manera recursiva la función \ttt{tex\_formula} que devuelva la fórmula en LaTeX con separadores de tabla. Esta función se utilizará para construir el encabezado de la tabla de verdad. \textbf{Ojo:} la negación agregra una columna extra por cuestiones de alineación de la tabla.
+
+\begin{lstlisting}
+>>> x1 = Formula(1)
+>>> x2 = Formula(2)
+>>> x3 = Formula(3)
+>>> f1 = Formula(x1, 'C', x2)
+>>> f2 = Formula(x3, 'N')
+>>> f3 = Formula(f1, 'D', f2)
+
+>>> f1.tex_formula())
+(x_{1} & \land & x_{2})
+>>> f2.tex_formula()
+( & \lnot & x_{3})
+>>> f3.tex_formula()
+((x_{1} & \land & x_{2}) & \lor & ( & \lnot & x_{3}))
+\end{lstlisting}
+
+\item Implemente la función \ttt{\_cabecera\_tabla} que devuelva una cadena en LaTeX que represente la cabecera de la tabla de verdad de la fórmula. Debe incluir las variables y la fórmula completa. No es necesario usar recursión.
+
+  \textbf{Ojo:} lo siguiente aplica a la función que sigue también. \texttt{\_cabecera\_tabla} debe terminar con un espacio después de la última subfórmula, dos $\diagdown \diagdown$ y un salto de línea $\diagdown$n. Hay varias formas de lograr esto, sea combinando raw-strings y una cadena normal o utlizando doble $\diagdown \diagdown$. Además, la cadena debe empezar con dos espacios en blanco (simplemente para dar claridad en la tabla final).
+
+\begin{lstlisting}
+>>> x1 = Formula(1)
+>>> x2 = Formula(2)
+>>> x3 = Formula(3)
+>>> f1 = Formula(x1, 'C', x2)
+>>> f2 = Formula(x3, 'N')
+>>> f3 = Formula(f1, 'D', f2)
+
+>>> f1._cabecera_tabla()
+  x_{1} & x_{2} & (x_{1} & \land & x_{2}) \\
+>>> f2._cabecera_tabla()
+  x_{3} & ( & \lnot & x_{3}) \\
+>>> f3._cabecera_tabla()
+  x_{1} & x_{2} & x_{3} & ((x_{1} & \land & x_{2}) & \lor & ( & \lnot & x_{3})) \\
+\end{lstlisting}
+
+\item Implemente la función \ttt{\_renglon\_verdad} que dada una asignación de valores de verdad a las variable, devuelva el renglon de la tabla de verdad en LaTeX. No es necesario usar recursión. La terminación de cada línea debe ser igual a la de \ttt{\_cabezera\_tabla}. Además, la función debe detectar si está imprimiendo el valor de verdad de la fórmula principal (la fórmula desde donde se manda a llamar la función) e imprimirlo con énfasis usando \textbackslash mathbf.
+  
+  \textit{Hint:} Utilizar \ttt{aplana\_sin\_variables} y \ttt{evalua\_sub} para obtener las subfórmulas y su evaluación dada la asignación de verdad.
+
+\begin{lstlisting}
+>>> x1 = Formula(1)
+>>> x2 = Formula(2)
+>>> x3 = Formula(3)
+>>> f1 = Formula(x1, 'C', x2)
+>>> f2 = Formula(x3, 'N')
+>>> f3 = Formula(f1,'D',f2)
+
+>>> f1._renglon_verdad((False, False)
+  0 & 0 & & \mathbf{0} & \\
+>>> f1._renglon_verdad((True, False)
+  1 & 0 & & \mathbf{0} & \\
+>>> f3._renglon_verdad(True, False, True)
+  1 & 0 & 1 & & 0 & & \mathbf{0} & & 0 & \\
+\end{lstlisting}
+
+\item Implemente la función \ttt{tabla\_verdad} que devuelva la tabla de verdad de la fórmula en LaTeX. No es necesario usar recursión. \textit{Hint:} cada formula agrega dos columnas (izquierda y conectivo) y al final de las fórmulas agregamos una columna más.
+\begin{lstlisting}
+>>> x1 = Formula(1)
+>>> x2 = Formula(2)
+>>> x3 = Formula(3)
+>>> f1 = Formula(x1, 'C', x2)
+>>> f2 = Formula(x3, 'N')
+>>> f3 = Formula(f1,'D',f2)
+
+>>> print(f1.tabla_verdad())
+\begin{adjustbox}{max width=\textwidth,array=cc|ccc} \\
+  x_{1} & x_{2} & (x_{1} & \land & x_{2}) \\
+  \hline
+  1 & 1 & & \mathbf{1} & \\
+  1 & 0 & & \mathbf{0} & \\
+  0 & 1 & & \mathbf{0} & \\
+  0 & 0 & & \mathbf{0} & \\
+\end{adjustbox}
+
+>>> f3.tabla_verdad()
+\begin{adjustbox}{max width=\textwidth,array=ccc|ccccccc} \\
+  x_{1} & x_{2} & x_{3} & ((x_{1} & \land & x_{2}) & \lor & ( & \lnot & x_{3})) \\
+  \hline
+  1 & 1 & 1 & & 1 & & \mathbf{1} & & 0 & \\
+  1 & 1 & 0 & & 1 & & \mathbf{1} & & 1 & \\
+  1 & 0 & 1 & & 0 & & \mathbf{0} & & 0 & \\
+  1 & 0 & 0 & & 0 & & \mathbf{1} & & 1 & \\
+  0 & 1 & 1 & & 0 & & \mathbf{0} & & 0 & \\
+  0 & 1 & 0 & & 0 & & \mathbf{1} & & 1 & \\
+  0 & 0 & 1 & & 0 & & \mathbf{0} & & 0 & \\
+  0 & 0 & 0 & & 0 & & \mathbf{1} & & 1 & \\
+\end{adjustbox}
+
+\end{lstlisting}
+
+\item Implemente la función \ttt{LaTeX} que genera un archivo con 
+  terminación .tex que es un documento LaTeX con la tabla de verdad de la
+  fórmula. No es necesario usar recursión.
+
+  \textit{Hint:} Utilizar las funciones \ttt{write}, \ttt{open}, \ttt{close} para
+  manipular los archivos. También se puede utilizar la biblioteca \ttt{pathlib}.
+
+\begin{lstlisting}
+>>> x1 = Formula(1)
+>>> x2 = Formula(2)
+>>> f1 = Formula(x1, 'C', x2)
+
+>>> f1.LaTeX("ejemplo")
+
+##Esto genera un archivo ejemplo.tex con el siguiente contenido
+\documentclass{article}
+
+\usepackage{adjustbox}
+
+\begin{document}
+
+\[
+\begin{adjustbox}{max width=\textwidth,array=cc|ccc} \\
+  x_{1} & x_{2} & (x_{1} & \land & x_{2}) \\
+  \hline
+  1 & 1 & & \mathbf{1} & \\
+  1 & 0 & & \mathbf{0} & \\
+  0 & 1 & & \mathbf{0} & \\
+  0 & 0 & & \mathbf{0} & \\
+\end{adjustbox}
+\]
+
+\end{document}
+\end{lstlisting}
+\end{enumerate}
+\end{document}
