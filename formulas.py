@@ -1,6 +1,13 @@
+ #Universidad Nacional Autónoma de México
+ #Facultad de Ciencias
+ #Licenciatura en Ciencias de la Computación
+ #Estructuras Discretas 
+ #Practica7  - Tablas de verdad y LaTeX
+ #Escrito por: Hernandez Vazquez Diego y Bruno Bernardo Soto Lugo
 from typing import List
 from itertools import product
 import pathlib
+from pathlib import Path #para la función LaTeX 
 
 Asignacion = List[bool]
 
@@ -100,9 +107,62 @@ class Formula:
         de las subfórmulas de la fórmula. Resultado asocia a cada subfórmula
         su valor de verdad bajo la asignación, como los diccionarios son
         mutables pueden devolverlo o simplemente modificarlo en su función.
-        """
-        return {}
 
+        Se sacaria una variable donde busco su posición y saco su valor de asignacion. 
+        Guardo el resultado[self] = valor.
+        - Si es una negación evalúo la subfórmula izquierda, luego calculo el valor de la subfórmula.
+        - Si es un conectivo evalúo recursivamente izquierda y derecha, luego calculo el valor según el conectivo y lo guardo.
+        """
+        # Caso hoja: variable
+        if self.conectivo is None:
+            # busco la posición de la variable (número) en la lista de variables
+            pos = None
+            for i, num in enumerate(variables):
+                if num == self.izquierda:
+                    pos = i
+                    break
+            if pos is None:
+                # esto no debería pasar si lista_variables() está bien
+                raise ValueError("La variable no está en la lista de variables.")
+            valor = asignacion[pos]
+            if self not in resultado:
+                resultado[self] = valor
+            return
+
+        # Caso negación: evaluo la subfórmula izquierda primero
+        if self.conectivo == 'N':
+            self.izquierda._evalua_sub_aux(asignacion, variables, resultado)
+            # calculo mi valor a partir del valor de la subfórmula
+            val_sub = resultado[self.izquierda]
+            val = not val_sub
+            if self not in resultado:
+                resultado[self] = val
+            return
+
+        # Caso binario: evaluo ambas ramas primero
+        self.izquierda._evalua_sub_aux(asignacion, variables, resultado)
+        self.derecha._evalua_sub_aux(asignacion, variables, resultado)
+
+        left_val = resultado[self.izquierda]
+        right_val = resultado[self.derecha]
+
+        # calculo según el conectivo (como principiante lo hago con ifs)
+        if self.conectivo == 'C':   # conjunción
+            val = left_val and right_val
+        elif self.conectivo == 'D': # disyunción
+            val = left_val or right_val
+        elif self.conectivo == 'I': # implicación (¬A ∨ B)
+            val = (not left_val) or right_val
+        elif self.conectivo == 'B': # bicondicional
+            val = (left_val and right_val) or (not left_val and not right_val)
+        else:
+            # no debería llegar aquí por las comprobaciones del constructor
+            raise ValueError(f"Conectivo desconocido: {self.conectivo}")
+
+        if self not in resultado:
+            resultado[self] = val
+        return
+    
     def evalua_sub(self, asignacion):
         """Recibe como entrada una lista de booleanos (asignación de verdad) y
         devuelve un diccionario con las fórmulas como llaves y sus valores de
@@ -111,26 +171,124 @@ class Formula:
         esta función es generar los renglones de la tabla de verdad
         correspondiente.
         """
-        return {}
+         # obtengo la lista de variables (en el orden esperado por 'asignacion')
+        variables = self.lista_variables()
+        resultado: dict['Formula', bool] = {}
+        # llamo a la función recursiva que va llenando el diccionario
+        self._evalua_sub_aux(asignacion, variables, resultado)
+        return resultado
 
     def tex_formula(self):
         """Devuelve la fórmula con los separadores necesarios para crear la
         tabla en LaTeX.
+        Solo hay 3 casoscposibles: variable, negación, binario.
+        - Caso variable: retorno x_{n}
+        - Caso negación: pongo la posición izquierda vacía y el operador \lnot
+        - Caso binario: obtengo las dos partes recursivamente y las uno
+           con el símbolo correspondiente. 
+
         """
-        return ""
+        # Caso variable: retorno x_{n}
+        if self.conectivo is None:
+            return f'x_{{{self.izquierda}}}'
+
+        # Caso negación: pongo la posición izquierda vacía y el operador \lnot
+        if self.conectivo == 'N':
+            sub_tex = self.izquierda.tex_formula()
+            return f'( & \\lnot & {sub_tex})'
+
+        # Caso binario: obtengo las dos partes recursivamente y las uno
+        left_tex = self.izquierda.tex_formula()
+        right_tex = self.derecha.tex_formula()
+
+        # mapeo de conectivos en latec
+        if self.conectivo == 'C':
+            simbolo = r'\land'
+        elif self.conectivo == 'D':
+            simbolo = r'\lor'
+        elif self.conectivo == 'I':
+            simbolo = r'\to'
+        elif self.conectivo == 'B':
+            simbolo = r'\leftrightarrow'
+        else:
+            # esto no debería pasar por las comprobaciones del constructor
+            raise ValueError(f"Conectivo desconocido: {self.conectivo}")
+
+        return f'({left_tex} & {simbolo} & {right_tex})'
 
     def _cabecera_tabla(self):
         """Devuelve la cabecera de la tabla de verdad en formato de tabla de
         LaTeX.
-        """
-        return ""
+        
+        Hacemos listas pequeñas para entender bien cómo queda la cadena final. 
+        """ 
+        # obtengo la lista de variables:
+        vars_list = self.lista_variables()
+
+        # se construye las partes para las variables,
+        partes = []
+        for n in vars_list:
+            partes.append(f'x_{{{n}}}')
+
+        # fórmula completa en TeX
+        formula_tex = self.tex_formula()
+
+        # si hay variables, las junto y añado la fórmula
+        if partes:
+            header = '  ' + ' & '.join(partes) + ' & ' + formula_tex + ' \\\\\n'
+        else:
+            header = '  ' + formula_tex + ' \\\\\n'
+
+        return header
+        
+
 
     def _renglon_verdad(self, asignacion):
         """Devuelve un renglón de la tabla de verdad de la fórmula,
         en formato de tabla de LaTeX, correspondiente a la
         asignación de verdad recibida.
         """
-        return ""
+        # Convertir True/False a '1'/'0'
+        vars_order = self.lista_variables()
+        valores_vars = []
+        for i in range(len(vars_order)):
+            valores_vars.append('1' if asignacion[i] else '0')
+
+        inicio = '  ' + ' & '.join(valores_vars)
+
+        # representación TeX de la fórmula completa
+        cuerpo_tex = self.tex_formula()
+
+        evals = self.evalua_sub(asignacion)
+
+        # subfórmulas internas en orden
+        subs = self.aplana_sin_variables()
+
+        # se reemplaza cada subfórmula por su valor de verdad
+        for sub in subs:
+            tex_sub = sub.tex_formula()
+            val = '1' if evals.get(sub, False) else '0'
+            if sub is self:
+                reemplazo = r'\mathbf{' + val + r'}'
+            else:
+                reemplazo = val
+            # se reemplaza la primera ocurrencia de la representación TeX de la subfórmula
+            # por el valor.
+            try:
+                cuerpo_tex = cuerpo_tex.replace(tex_sub, reemplazo, 1)
+            except Exception:
+                pass
+
+        # se borran las apariciones de variables dentro del cuerpo TeX para mantener
+        # las columnas vacías
+        for n in vars_order:
+            cuerpo_tex = cuerpo_tex.replace(f'x_{{{n}}}', '')
+
+        # se construye el renglón final 
+        renglon = inicio + ' & ' + cuerpo_tex + ' \\\\\n'
+
+        return renglon
+
 
     def tabla_verdad(self):
         """Devuelve la tabla de verdad de la fórmula en formato LaTeX."""
@@ -141,7 +299,72 @@ class Formula:
         mínimo en LaTeX para poder compilar la tabla de verdad asociada a la
         fórmula.
         """
-        pass
+        # Crear el archivo .tex
+        p = Path(nombre_archivo)
+        if p.suffix != ".tex":
+            # Si no, pues se lo pongo
+            p = p.with_suffix(".tex")
+
+        # Ahora saco la lista de variables y la fórmula en versión LaTeX
+        vars_list = self.lista_variables()
+        formula_tex = self.tex_formula()   # aquí salen los &
+
+        # Cuento cuántas variables hay
+        num_vars = len(vars_list)
+
+        # Número de columnas de la fórmula
+        formula_cols = formula_tex.count("&") + 1
+
+        # Construyo las columnas
+        cols_vars = ""
+        for _ in range(num_vars):
+            cols_vars += "c"
+
+        cols_formula = ""
+        for _ in range(formula_cols):
+            cols_formula += "c "
+
+        # Junto todo
+        array_spec = cols_vars + "|" + cols_formula
+
+        # Ahora hago una lista donde voy metiendo cada línea
+        lines = []
+        lines.append(r"\documentclass{article}")
+        lines.append(r"\usepackage{adjustbox}")
+        lines.append(r"\begin{document}")
+        lines.append(r"\[")
+        lines.append(r"\begin{adjustbox}{max width=\textwidth, array=" + array_spec + r"} \\")
+
+        # Cabecera
+        cab = self._cabecera_tabla()
+        for ln in cab.splitlines():
+            lines.append(ln)
+
+        # Línea horizontal
+        lines.append(r"\hline")
+
+        # Ahora necesito todas las combinaciones de valores
+        from itertools import product  # importar aquí para no molestar en otras funciones
+        if num_vars == 0:
+            assignments = [()]
+        else:
+            assignments = list(product([True, False], repeat=num_vars))
+
+        # Uso la función de renglón
+        for asign in assignments:
+            reng = self._renglon_verdad(asign)
+            for ln in reng.splitlines():
+                lines.append(ln)
+
+        # Final del entorno
+        lines.append(r"\end{adjustbox}")
+        lines.append(r"\]")
+        lines.append(r"\end{document}")
+
+        # Se escribe el archivo .tex 
+        f = open(str(p), "w", encoding="utf-8")
+        f.write("\n".join(lines) + "\n")
+        f.close()
 
 # x1 = Formula(1)
 # x2 = Formula(2)
